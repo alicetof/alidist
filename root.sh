@@ -1,6 +1,6 @@
 package: ROOT
 version: "%(tag_basename)s"
-tag: "v6-20-02-alice8"
+tag: "v6-20-08-alice1"
 source: https://github.com/alisw/root
 requires:
   - arrow
@@ -20,15 +20,15 @@ requires:
 build_requires:
   - CMake
   - "Xcode:(osx.*)"
+  - alibuild-recipe-tools
 env:
   ROOTSYS: "$ROOT_ROOT"
+  SYSTEM_VERSION_COMPAT: "1"
 prepend_path:
   PYTHONPATH: "$ROOTSYS/lib"
 incremental_recipe: |
   # Limit parallel builds to prevent OOM
-  JOBS=$((${JOBS:-1}*3/5))
-  [[ $JOBS -gt 0 ]] || JOBS=1
-  cmake --build . --target install ${JOBS:+-- -j$JOBS}
+  cmake --build . --target install ${JOBS+-j $JOBS}
   rm -vf "$INSTALLROOT/etc/plugins/TGrid/P010_TAlien.C"         \
          "$INSTALLROOT/etc/plugins/TSystem/P030_TAlienSystem.C" \
          "$INSTALLROOT/etc/plugins/TFile/P070_TAlienFile.C"
@@ -37,7 +37,8 @@ incremental_recipe: |
 ---
 #!/bin/bash -e
 unset ROOTSYS
-
+# Get ROOT to work on Big Sur (this will modify the version returned by sw_vers from 11.0 to 10.16)
+export SYSTEM_VERSION_COMPAT=1
 COMPILER_CC=cc
 COMPILER_CXX=c++
 COMPILER_LD=c++
@@ -186,10 +187,7 @@ for FEATURE in $NO_FEATURES; do
   bin/root-config --has-$FEATURE | grep -q no
 done
 
-# Limit parallel builds to prevent OOM
-JOBS=$((${JOBS:-1}*3/5))
-[[ $JOBS -gt 0 ]] || JOBS=1
-cmake --build . --target install ${JOBS:+-- -j$JOBS}
+cmake --build . --target install ${JOBS+-j $JOBS}
 
 # Add support for ROOT_PLUGIN_PATH envvar for specifying additional plugin search paths
 grep -v '^Unix.*.Root.PluginPath' $INSTALLROOT/etc/system.rootrc > system.rootrc.0
@@ -217,37 +215,15 @@ rm -vf "$INSTALLROOT/etc/plugins/TGrid/P010_TAlien.C"         \
 
 # Modulefile
 mkdir -p etc/modulefiles
-cat > etc/modulefiles/$PKGNAME <<EoF
-#%Module1.0
-proc ModulesHelp { } {
-  global version
-  puts stderr "ALICE Modulefile for $PKGNAME $PKGVERSION-@@PKGREVISION@$PKGHASH@@"
-}
-set version $PKGVERSION-@@PKGREVISION@$PKGHASH@@
-module-whatis "ALICE Modulefile for $PKGNAME $PKGVERSION-@@PKGREVISION@$PKGHASH@@"
-# Dependencies
-module load BASE/1.0 ${ALIEN_RUNTIME_REVISION:+AliEn-Runtime/$ALIEN_RUNTIME_VERSION-$ALIEN_RUNTIME_REVISION}     \\
-                     ${OPENSSL_REVISION:+OpenSSL/$OPENSSL_VERSION-$OPENSSL_REVISION}                             \\
-                     ${XROOTD_REVISION:+XRootD/$XROOTD_VERSION-$XROOTD_REVISION}                                 \\
-                     ${LIBXML2_REVISION:+libxml2/$LIBXML2_VERSION-$LIBXML2_REVISION}                             \\
-                     ${GCC_TOOLCHAIN_REVISION:+GCC-Toolchain/$GCC_TOOLCHAIN_VERSION-$GCC_TOOLCHAIN_REVISION}     \\
-                     ${GSL_REVISION:+GSL/$GSL_VERSION-$GSL_REVISION}                                             \\
-                     ${FREETYPE_REVISION:+FreeType/$FREETYPE_VERSION-$FREETYPE_REVISION}                         \\
-                     ${PYTHON_REVISION:+Python/$PYTHON_VERSION-$PYTHON_REVISION}                                 \\
-                     ${PYTHON_MODULES_REVISION:+Python-modules/$PYTHON_MODULES_VERSION-$PYTHON_MODULES_REVISION} \\
-                     ${ARROW_REVISION:+arrow/$ARROW_VERSION-$ARROW_REVISION}                                     \\
-                     ${LIBPNG_REVISION:+libpng/$LIBPNG_VERSION-$LIBPNG_REVISION}                                 \\
-                     ${LZMA_REVISION:+lzma/$LZMA_VERSION-$LZMA_REVISION}
+alibuild-generate-module --bin --lib > etc/modulefiles/$PKGNAME
+cat >> etc/modulefiles/$PKGNAME <<EoF
 # Our environment
 setenv ROOT_RELEASE \$version
 setenv ROOT_BASEDIR \$::env(BASEDIR)/$PKGNAME
 setenv ROOTSYS \$::env(ROOT_BASEDIR)/\$::env(ROOT_RELEASE)
-
-set ROOT_ROOT  \$::env(ROOTSYS)
-prepend-path PYTHONPATH \$ROOT_ROOT/lib
-prepend-path PATH \$ROOT_ROOT/bin
-prepend-path LD_LIBRARY_PATH \$ROOT_ROOT/lib
-prepend-path ROOT_DYN_PATH \$ROOT_ROOT/lib
+setenv SYSTEM_VERSION_COMPAT 1
+prepend-path PYTHONPATH \$PKG_ROOT/lib
+prepend-path ROOT_DYN_PATH \$PKG_ROOT/lib
 EoF
 mkdir -p $INSTALLROOT/etc/modulefiles && rsync -a --delete etc/modulefiles/ $INSTALLROOT/etc/modulefiles
 
