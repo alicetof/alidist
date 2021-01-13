@@ -1,27 +1,21 @@
 package: TpcFecUtils
 version: "%(tag_basename)s"
-tag: v0.1.0
+tag: v0.1.1
 requires:
+  - "GCC-Toolchain:(?!osx)"
   - boost
-  - Python
+  - "Python:(slc.*)"
+  - "Python-system:(?!slc)"
   - ReadoutCard
   - LLA
 build_requires:
   - CMake
-  - "GCC-Toolchain:(?!osx)"
-source: https://gitlab+deploy-token-1303:ivjQdcMRX9qpxdv4RCcM@gitlab.cern.ch/alice-tpc-upgrade/alice-tpc-fec-utils.git
+source: https://gitlab.cern.ch/alice-tpc-upgrade/alice-tpc-fec-utils.git
 incremental_recipe: |
   make ${JOBS:+-j$JOBS} install
   mkdir -p $INSTALLROOT/etc/modulefiles && rsync -a --delete etc/modulefiles/ $INSTALLROOT/etc/modulefiles
 ---
 #!/bin/bash -ex
-
-# Handle submodule business
-pushd $SOURCEDIR
-git config submodule.submodules/gbt-hdlc.url \
-  https://gitlab+deploy-token-1305:2SyHnx1Tk8Rc8dY5AV9s@gitlab.cern.ch/alice-tpc-upgrade/gbt-hdlc-light.git
-git submodule update --init
-popd
 
 case $ARCHITECTURE in
     osx*) [[ ! $BOOST_ROOT ]] && BOOST_ROOT=$(brew --prefix boost);;

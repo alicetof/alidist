@@ -2,10 +2,10 @@ package: libxml2
 version: "%(tag_basename)s"
 tag: v2.9.3
 build_requires:
-  - autotools
+  - "autotools:(slc6|slc7)"
   - zlib
   - "GCC-Toolchain:(?!osx)"
-source: https://gitlab.gnome.org/GNOME/libxml2.git
+source: https://github.com/alisw/libxml2.git
 prefer_system: "(?!slc5)"
 prefer_system_check: |
   xml2-config --version;

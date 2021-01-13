@@ -15,6 +15,7 @@ build_requires:
   - Alice-GRID-Utils
 append_path:
   ROOT_PLUGIN_PATH: "$JALIEN_ROOT_ROOT/etc/plugins"
+  ROOT_INCLUDE_PATH: "$JALIEN_ROOT_ROOT/include"
 ---
 #!/bin/bash -e
 case $ARCHITECTURE in
@@ -29,6 +30,7 @@ rsync -a $ALICE_GRID_UTILS_ROOT/include/ $BUILDDIR/inc
 
 cmake $BUILDDIR                                          \
       -DCMAKE_INSTALL_PREFIX="$INSTALLROOT"              \
+      ${CXXSTD:+-DCMAKE_CXX_STANDARD=${CXXSTD}}          \
       -DROOTSYS="$ROOTSYS"                               \
       -DJSONC="$JSON_C_ROOT"                             \
        ${OPENSSL_ROOT:+-DOPENSSL_ROOT_DIR=$OPENSSL_ROOT} \

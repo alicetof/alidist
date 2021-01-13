@@ -1,6 +1,6 @@
 package: c-ares
-version: "v1.15.0"
-tag: cares-1_15_0
+version: "v1.17.1"
+tag: cares-1_17_1
 build_requires:
   - "GCC-Toolchain:(?!osx)"
   - CMake
@@ -11,7 +11,7 @@ incremental_recipe: |
 ---
 #!/bin/bash -e
 
-cmake $SOURCEDIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$INSTALLROOT
+cmake $SOURCEDIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$INSTALLROOT -DCMAKE_INSTALL_LIBDIR=lib
 make ${JOBS:+-j$JOBS} install
 
 

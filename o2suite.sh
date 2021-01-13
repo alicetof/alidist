@@ -3,7 +3,9 @@ version: "1.0.0"
 tag: "O2Suite-1.0.0"
 requires:
   - Common-O2
-  - Control
+  - coconut
+  - Control-Core
+  - Control-OCCPlugin
   - Monitoring
   - Configuration
   - O2
@@ -15,7 +17,6 @@ requires:
   - QualityControl
   - "DataDistribution:(?!osx)"
   - "ALF:(?!osx|slc8)"
-  - "TpcFecUtils:(?!osx)"
 valid_defaults:
   - o2
   - o2-dataflow
